@@ -13,7 +13,7 @@ import SkillBreakdown from '@/components/SkillBreakdown';
 import ReadingCalendar from '@/components/ReadingCalendar';
 import ProgressChart from '@/components/ProgressChart';
 
-const Progress = () => {
+const Progressed = () => {
   const [activeTab, setActiveTab] = useState('overview');
 
   // Sample progress data
@@ -215,4 +215,4 @@ const Progress = () => {
   );
 };
 
-export default Progress;
+export default Progressed;

@@ -11,7 +11,6 @@ interface QuestionOption {
   text: string;
   isCorrect: boolean;
 }
-
 interface ComprehensionQuestion {
   id: string;
   question: string;
@@ -21,7 +20,6 @@ interface ComprehensionQuestion {
   type: 'multiple-choice' | 'drag-drop' | 'image-match';
   category: 'character' | 'plot' | 'vocabulary' | 'prediction' | 'main-idea' | 'details' | 'sequence' | 'cause-effect';
 }
-
 interface ComprehensionQuestionProps {
   question: ComprehensionQuestion;
   isOpen: boolean;
