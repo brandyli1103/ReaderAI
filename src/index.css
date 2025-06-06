@@ -1,3 +1,4 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -15,7 +16,7 @@
     --popover: 0 0% 100%;
     --popover-foreground: 222.2 84% 4.9%;
 
-    --primary: 222.2 47.4% 11.2%;
+    --primary: 220 100% 50%;
     --primary-foreground: 210 40% 98%;
 
     --secondary: 210 40% 96.1%;
@@ -36,21 +37,13 @@
 
     --radius: 0.5rem;
 
-    --sidebar-background: 0 0% 98%;
-
-    --sidebar-foreground: 240 5.3% 26.1%;
-
-    --sidebar-primary: 240 5.9% 10%;
-
-    --sidebar-primary-foreground: 0 0% 98%;
-
-    --sidebar-accent: 240 4.8% 95.9%;
-
-    --sidebar-accent-foreground: 240 5.9% 10%;
-
-    --sidebar-border: 220 13% 91%;
-
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    /* ReadWise Kids Custom Colors */
+    --readwise-blue: 220 100% 50%;
+    --readwise-green: 142 76% 36%;
+    --readwise-orange: 25 95% 53%;
+    --readwise-purple: 271 81% 56%;
+    --readwise-yellow: 48 100% 67%;
+    --readwise-pink: 330 81% 60%;
   }
 
   .dark {
@@ -81,14 +74,6 @@
     --border: 217.2 32.6% 17.5%;
     --input: 217.2 32.6% 17.5%;
     --ring: 212.7 26.8% 83.9%;
-    --sidebar-background: 240 5.9% 10%;
-    --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 224.3 76.3% 48%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 3.7% 15.9%;
-    --sidebar-accent-foreground: 240 4.8% 95.9%;
-    --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
   }
 }
 
@@ -98,6 +83,50 @@
   }
 
   body {
-    @apply bg-background text-foreground;
+    @apply bg-gradient-to-br from-blue-50 to-green-50 text-foreground;
+    font-family: 'Comic Neue', cursive, sans-serif;
   }
+}
+
+@layer utilities {
+  .text-readwise-blue { color: hsl(var(--readwise-blue)); }
+  .text-readwise-green { color: hsl(var(--readwise-green)); }
+  .text-readwise-orange { color: hsl(var(--readwise-orange)); }
+  .text-readwise-purple { color: hsl(var(--readwise-purple)); }
+  .text-readwise-yellow { color: hsl(var(--readwise-yellow)); }
+  .text-readwise-pink { color: hsl(var(--readwise-pink)); }
+  
+  .bg-readwise-blue { background-color: hsl(var(--readwise-blue)); }
+  .bg-readwise-green { background-color: hsl(var(--readwise-green)); }
+  .bg-readwise-orange { background-color: hsl(var(--readwise-orange)); }
+  .bg-readwise-purple { background-color: hsl(var(--readwise-purple)); }
+  .bg-readwise-yellow { background-color: hsl(var(--readwise-yellow)); }
+  .bg-readwise-pink { background-color: hsl(var(--readwise-pink)); }
+
+  .bounce-slow {
+    animation: bounce 3s infinite;
+  }
+  
+  .float {
+    animation: float 6s ease-in-out infinite;
+  }
+  
+  .wiggle {
+    animation: wiggle 1s ease-in-out infinite;
+  }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+}
+
+@keyframes wiggle {
+  0%, 7% { transform: rotate(0deg); }
+  15% { transform: rotate(-3deg); }
+  20% { transform: rotate(3deg); }
+  25% { transform: rotate(-3deg); }
+  30% { transform: rotate(3deg); }
+  35% { transform: rotate(-1deg); }
+  40%, 100% { transform: rotate(0deg); }
 }
