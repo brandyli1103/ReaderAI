@@ -3,7 +3,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { BookOpen, Users, Lightbulb, Clock, Star, Share2, Heart } from 'lucide-react';
+import { BookOpen, Users, Lightbulb, Clock, Star, Share2, Heart, HelpCircle } from 'lucide-react';
+import { HoverCard, HoverCardContent, HoverCardTrigger } from '@/components/ui/hover-card';
 
 interface BookSummary {
   keyPlotPoints: string[];
@@ -43,6 +44,7 @@ const BookSummaryGenerator = ({
   const [summary, setSummary] = useState<BookSummary | null>(null);
   const [isGenerating, setIsGenerating] = useState(true);
   const [activeTab, setActiveTab] = useState<'plot' | 'characters' | 'themes' | 'timeline'>('plot');
+  const [showStarHint, setShowStarHint] = useState(false);
 
   // Sample data - in a real app, this would come from AI generation
   const sampleSummary: BookSummary = {
@@ -98,12 +100,53 @@ const BookSummaryGenerator = ({
     return () => clearTimeout(timer);
   }, []);
 
+  const renderStarHint = () => (
+    <HoverCard>
+      <HoverCardTrigger asChild>
+        <Button
+          variant="ghost"
+          className="text-readwise-blue hover:text-readwise-blue/80 font-comic"
+          onClick={() => setShowStarHint(!showStarHint)}
+        >
+          <HelpCircle className="h-5 w-5 mr-2" />
+          STAR Framework Hint
+        </Button>
+      </HoverCardTrigger>
+      <HoverCardContent className="w-80 bg-white p-4 rounded-lg shadow-lg border-2 border-readwise-blue/20">
+        <div className="space-y-3">
+          <h4 className="font-comic font-bold text-readwise-blue">STAR Framework Guide</h4>
+          <div className="space-y-2">
+            <div>
+              <span className="font-bold text-readwise-green">Situation:</span>
+              <p className="text-sm text-gray-600">Set the context of your story. Briefly describe the background, setting, and any relevant details.</p>
+            </div>
+            <div>
+              <span className="font-bold text-readwise-blue">Task:</span>
+              <p className="text-sm text-gray-600">Explain your specific responsibility or goal in that situation. What were you tasked with or what did you aim to achieve?</p>
+            </div>
+            <div>
+              <span className="font-bold text-readwise-purple">Action:</span>
+              <p className="text-sm text-gray-600">Detail the specific steps you took to address the task or situation. Explain what you did and why.</p>
+            </div>
+            <div>
+              <span className="font-bold text-readwise-yellow">Result:</span>
+              <p className="text-sm text-gray-600">Describe the outcome of your actions and any positive impacts or results you achieved.</p>
+            </div>
+          </div>
+        </div>
+      </HoverCardContent>
+    </HoverCard>
+  );
+
   const renderPlotSection = () => (
     <div className="space-y-4">
-      <h3 className="text-lg font-comic font-bold text-readwise-blue flex items-center">
-        <BookOpen className="h-5 w-5 mr-2" />
-        Key Story Points
-      </h3>
+      <div className="flex items-center justify-between">
+        <h3 className="text-lg font-comic font-bold text-readwise-blue flex items-center">
+          <BookOpen className="h-5 w-5 mr-2" />
+          Key Story Points
+        </h3>
+        {renderStarHint()}
+      </div>
       <div className="space-y-3">
         {summary?.keyPlotPoints.map((point, index) => (
           <Card key={index} className="border-l-4 border-readwise-green bg-green-50">

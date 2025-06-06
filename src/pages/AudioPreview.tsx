@@ -7,7 +7,6 @@ import { textToSpeech } from '@/utils/elevenlabs';
 import { useState, useRef, useEffect } from 'react';
 import { useToast } from '@/components/ui/use-toast';
 import { Textarea } from '@/components/ui/textarea';
-import StarFrameworkHints from '@/components/StarFrameworkHints';
 
 const AudioPreview = () => {
   const navigate = useNavigate();
@@ -17,7 +16,6 @@ const AudioPreview = () => {
   const [showSummary, setShowSummary] = useState(false);
   const [summary, setSummary] = useState('');
   const [summarySubmitted, setSummarySubmitted] = useState(false);
-  const [showStarHints, setShowStarHints] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
   const sampleParagraph = `Emma loved exploring the woods behind her house. One sunny morning, she discovered a shimmering path she had never seen before. The path was covered with sparkly leaves that seemed to dance in the sunlight.
@@ -81,13 +79,6 @@ const AudioPreview = () => {
     setIsPlaying(false);
   };
 
-  const handleHintSelect = (hint: string) => {
-    setSummary(prev => {
-      const newSummary = prev ? `${prev}\n\n${hint}` : hint;
-      return newSummary;
-    });
-  };
-
   return (
     <div className="min-h-screen bg-gradient-to-b from-readwise-blue/5 to-white">
       <Header />
@@ -146,40 +137,27 @@ const AudioPreview = () => {
                 </div>
 
                 {showSummary && !summarySubmitted && (
-                  <div className="mt-8 space-y-4">
-                    <div className="p-6 bg-white rounded-lg border-2 border-readwise-blue/20">
-                      <h2 className="text-2xl font-bold text-readwise-blue font-comic mb-4">
-                        Write a Summary 📝
-                      </h2>
-                      <p className="text-gray-700 font-comic mb-4">
-                        Please write a summary of what you just heard in your own words.
-                      </p>
-                      <Textarea
-                        value={summary}
-                        onChange={(e) => setSummary(e.target.value)}
-                        placeholder="Write your summary here..."
-                        className="w-full h-32 font-comic mb-4"
-                      />
-                      <div className="flex justify-between items-center">
-                        <Button
-                          onClick={() => setShowStarHints(!showStarHints)}
-                          variant="outline"
-                          className="font-comic text-readwise-yellow border-readwise-yellow hover:bg-readwise-yellow/10"
-                        >
-                          {showStarHints ? 'Hide STAR Hints' : 'Show STAR Hints'}
-                        </Button>
-                        <Button
-                          onClick={handleSummarySubmit}
-                          className="bg-readwise-blue hover:bg-readwise-blue/90 text-white font-comic"
-                        >
-                          Submit Summary
-                        </Button>
-                      </div>
+                  <div className="mt-8 p-6 bg-white rounded-lg border-2 border-readwise-blue/20">
+                    <h2 className="text-2xl font-bold text-readwise-blue font-comic mb-4">
+                      Write a Summary 📝
+                    </h2>
+                    <p className="text-gray-700 font-comic mb-4">
+                      Please write a summary of what you just heard in your own words.
+                    </p>
+                    <Textarea
+                      value={summary}
+                      onChange={(e) => setSummary(e.target.value)}
+                      placeholder="Write your summary here..."
+                      className="w-full h-32 font-comic mb-4"
+                    />
+                    <div className="flex justify-end">
+                      <Button
+                        onClick={handleSummarySubmit}
+                        className="bg-readwise-blue hover:bg-readwise-blue/90 text-white font-comic"
+                      >
+                        Submit Summary
+                      </Button>
                     </div>
-
-                    {showStarHints && (
-                      <StarFrameworkHints onHintSelect={handleHintSelect} />
-                    )}
                   </div>
                 )}
 
