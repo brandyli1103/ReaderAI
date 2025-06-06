@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -18,6 +17,10 @@ import {
 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { HoverCard, HoverCardContent, HoverCardTrigger } from '@/components/ui/hover-card';
+import ComprehensionQuestion from '@/components/ComprehensionQuestion';
+import PostReadingQuiz from '@/components/PostReadingQuiz';
+import { useComprehensionQuestions, type ComprehensionQuestion as ComprehensionQuestionType } from '@/hooks/useComprehensionQuestions';
+import { useToast } from '@/hooks/use-toast';
 
 interface BookContent {
   id: string;
@@ -110,12 +113,24 @@ Emma felt honored to be chosen. She sat by the pond and watched as fish with sca
 const ReadingInterface = () => {
   const { bookId } = useParams();
   const navigate = useNavigate();
+  const { toast } = useToast();
   const [currentChapter, setCurrentChapter] = useState(0);
   const [currentPage, setCurrentPage] = useState(0);
   const [fontSize, setFontSize] = useState(18);
   const [isAudioPlaying, setIsAudioPlaying] = useState(false);
   const [isBookmarked, setIsBookmarked] = useState(false);
   const [showAIHelper, setShowAIHelper] = useState(false);
+  const [showComprehensionQuestion, setShowComprehensionQuestion] = useState(false);
+  const [currentQuestion, setCurrentQuestion] = useState<ComprehensionQuestionType | null>(null);
+  const [showPostReadingQuiz, setShowPostReadingQuiz] = useState(false);
+  const [hasSeenPageQuestions, setHasSeenPageQuestions] = useState<Set<number>>(new Set());
+
+  const {
+    getQuestionsForPage,
+    getPostReadingQuestions,
+    markQuestionAnswered,
+    comprehensionScore
+  } = useComprehensionQuestions(bookId || '1');
 
   const book = sampleBook; // In real app, fetch based on bookId
   const totalPages = book.chapters.reduce((total, chapter) => total + chapter.pages.length, 0);
@@ -123,6 +138,20 @@ const ReadingInterface = () => {
   const progress = (currentPageNumber / totalPages) * 100;
 
   const currentPageContent = book.chapters[currentChapter]?.pages[currentPage];
+
+  // Check for comprehension questions when page changes
+  useEffect(() => {
+    const pageQuestions = getQuestionsForPage(currentPageNumber);
+    if (pageQuestions.length > 0 && !hasSeenPageQuestions.has(currentPageNumber)) {
+      // Show question after a short delay to let reader see the page first
+      const timer = setTimeout(() => {
+        setCurrentQuestion(pageQuestions[0]);
+        setShowComprehensionQuestion(true);
+        setHasSeenPageQuestions(prev => new Set([...prev, currentPageNumber]));
+      }, 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [currentPageNumber, getQuestionsForPage, hasSeenPageQuestions]);
 
   const handlePreviousPage = () => {
     if (currentPage > 0) {
@@ -134,6 +163,15 @@ const ReadingInterface = () => {
   };
 
   const handleNextPage = () => {
+    const isLastPageOfBook = currentChapter === book.chapters.length - 1 && 
+                            currentPage === book.chapters[currentChapter].pages.length - 1;
+    
+    if (isLastPageOfBook) {
+      // Show post-reading quiz
+      setShowPostReadingQuiz(true);
+      return;
+    }
+
     if (currentPage < book.chapters[currentChapter].pages.length - 1) {
       setCurrentPage(currentPage + 1);
     } else if (currentChapter < book.chapters.length - 1) {
@@ -153,6 +191,31 @@ const ReadingInterface = () => {
       if (!increment && prev > 14) return prev - 2;
       return prev;
     });
+  };
+
+  const handleComprehensionAnswer = (correct: boolean) => {
+    if (currentQuestion) {
+      markQuestionAnswered(currentQuestion.id, correct);
+      
+      toast({
+        title: correct ? "Excellent! 🌟" : "Good try! 📚",
+        description: correct 
+          ? "You understood the story perfectly!" 
+          : "Keep reading and learning!",
+        duration: 3000,
+      });
+    }
+    setShowComprehensionQuestion(false);
+    setCurrentQuestion(null);
+  };
+
+  const handlePostReadingQuizComplete = (score: number) => {
+    toast({
+      title: "Quiz Completed! 🎉",
+      description: `You scored ${score}% on the reading quiz!`,
+      duration: 5000,
+    });
+    setShowPostReadingQuiz(false);
   };
 
   const renderContentWithVocabulary = (content: string, vocabularyWords: VocabularyWord[]) => {
@@ -323,14 +386,21 @@ const ReadingInterface = () => {
               <p className="font-comic text-sm text-gray-500">
                 Page {currentPage + 1} of {book.chapters[currentChapter]?.pages.length}
               </p>
+              {comprehensionScore > 0 && (
+                <p className="font-comic text-xs text-readwise-green mt-1">
+                  Comprehension Score: {comprehensionScore} ⭐
+                </p>
+              )}
             </div>
 
             <Button
               onClick={handleNextPage}
-              disabled={currentChapter === book.chapters.length - 1 && currentPage === book.chapters[currentChapter].pages.length - 1}
               className="bg-readwise-blue hover:bg-readwise-blue/90 text-white font-comic text-lg py-6 px-8"
             >
-              Next
+              {currentChapter === book.chapters.length - 1 && currentPage === book.chapters[currentChapter].pages.length - 1 
+                ? 'Finish Book' 
+                : 'Next'
+              }
               <ChevronRight className="h-6 w-6 ml-2" />
             </Button>
           </div>
@@ -370,6 +440,26 @@ const ReadingInterface = () => {
           </CardContent>
         </Card>
       )}
+
+      {/* Comprehension Question Modal */}
+      {currentQuestion && (
+        <ComprehensionQuestion
+          question={currentQuestion}
+          isOpen={showComprehensionQuestion}
+          onAnswer={handleComprehensionAnswer}
+          onClose={() => setShowComprehensionQuestion(false)}
+          showHint={true}
+        />
+      )}
+
+      {/* Post-Reading Quiz Modal */}
+      <PostReadingQuiz
+        questions={getPostReadingQuestions()}
+        isOpen={showPostReadingQuiz}
+        onComplete={handlePostReadingQuizComplete}
+        onClose={() => setShowPostReadingQuiz(false)}
+        bookTitle={book.title}
+      />
     </div>
   );
 };
