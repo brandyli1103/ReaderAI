@@ -1,14 +1,25 @@
 
 import { Book, BookOpen, TrendingUp, HelpCircle, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useNavigate, useLocation } from 'react-router-dom';
 
 const Header = () => {
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  const isActive = (path: string) => {
+    return location.pathname === path;
+  };
+
   return (
     <header className="bg-white/80 backdrop-blur-sm border-b-2 border-readwise-blue/20 sticky top-0 z-50">
       <div className="container mx-auto px-4 py-3">
         <div className="flex items-center justify-between">
           {/* Logo */}
-          <div className="flex items-center space-x-2">
+          <div 
+            className="flex items-center space-x-2 cursor-pointer" 
+            onClick={() => navigate('/')}
+          >
             <div className="bg-gradient-to-r from-readwise-blue to-readwise-green p-2 rounded-xl">
               <Book className="h-8 w-8 text-white" />
             </div>
@@ -20,11 +31,27 @@ const Header = () => {
 
           {/* Navigation */}
           <nav className="hidden md:flex items-center space-x-1">
-            <Button variant="ghost" className="text-readwise-blue hover:bg-readwise-blue/10 font-comic text-lg">
+            <Button 
+              variant="ghost" 
+              onClick={() => navigate('/')}
+              className={`font-comic text-lg ${
+                isActive('/') 
+                  ? 'text-readwise-blue bg-readwise-blue/10' 
+                  : 'text-readwise-blue hover:bg-readwise-blue/10'
+              }`}
+            >
               <Book className="h-5 w-5 mr-2" />
               Home
             </Button>
-            <Button variant="ghost" className="text-readwise-green hover:bg-readwise-green/10 font-comic text-lg">
+            <Button 
+              variant="ghost" 
+              onClick={() => navigate('/library')}
+              className={`font-comic text-lg ${
+                isActive('/library') 
+                  ? 'text-readwise-green bg-readwise-green/10' 
+                  : 'text-readwise-green hover:bg-readwise-green/10'
+              }`}
+            >
               <BookOpen className="h-5 w-5 mr-2" />
               My Books
             </Button>
