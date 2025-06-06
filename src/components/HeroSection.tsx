@@ -1,8 +1,10 @@
-
 import { Button } from '@/components/ui/button';
 import { BookOpen, Sparkles } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 const HeroSection = () => {
+  const navigate = useNavigate();
+
   return (
     <section className="py-12 md:py-20">
       <div className="container mx-auto px-4">
@@ -29,6 +31,7 @@ const HeroSection = () => {
               <Button 
                 size="lg" 
                 className="bg-gradient-to-r from-readwise-blue to-readwise-green hover:from-readwise-green hover:to-readwise-blue text-white font-comic text-xl px-8 py-6 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
+                onClick={() => navigate('/reading-options')}
               >
                 <BookOpen className="h-6 w-6 mr-2" />
                 Start Reading Now!

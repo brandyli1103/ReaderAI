@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -9,6 +8,7 @@ import Library from "./pages/Library";
 import ReadingInterface from "./pages/ReadingInterface";
 import Progress from "./pages/Progress";
 import NotFound from "./pages/NotFound";
+import ReadingOptions from "./pages/ReadingOptions";
 
 const queryClient = new QueryClient();
 
@@ -23,6 +23,7 @@ const App = () => (
           <Route path="/library" element={<Library />} />
           <Route path="/read/:bookId" element={<ReadingInterface />} />
           <Route path="/progress" element={<Progress />} />
+          <Route path="/reading-options" element={<ReadingOptions />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
