@@ -21,6 +21,7 @@ import ComprehensionQuestion from '@/components/ComprehensionQuestion';
 import PostReadingQuiz from '@/components/PostReadingQuiz';
 import { useComprehensionQuestions, type ComprehensionQuestion as ComprehensionQuestionType } from '@/hooks/useComprehensionQuestions';
 import { useToast } from '@/hooks/use-toast';
+import BookSummaryModal from '@/components/BookSummaryModal';
 
 interface BookContent {
   id: string;
@@ -124,6 +125,7 @@ const ReadingInterface = () => {
   const [currentQuestion, setCurrentQuestion] = useState<ComprehensionQuestionType | null>(null);
   const [showPostReadingQuiz, setShowPostReadingQuiz] = useState(false);
   const [hasSeenPageQuestions, setHasSeenPageQuestions] = useState<Set<number>>(new Set());
+  const [showBookSummary, setShowBookSummary] = useState(false);
 
   const {
     getQuestionsForPage,
@@ -216,6 +218,11 @@ const ReadingInterface = () => {
       duration: 5000,
     });
     setShowPostReadingQuiz(false);
+    
+    // Show book summary after quiz completion
+    setTimeout(() => {
+      setShowBookSummary(true);
+    }, 1000);
   };
 
   const renderContentWithVocabulary = (content: string, vocabularyWords: VocabularyWord[]) => {
@@ -459,6 +466,16 @@ const ReadingInterface = () => {
         onComplete={handlePostReadingQuizComplete}
         onClose={() => setShowPostReadingQuiz(false)}
         bookTitle={book.title}
+      />
+
+      {/* Book Summary Modal */}
+      <BookSummaryModal
+        isOpen={showBookSummary}
+        onClose={() => setShowBookSummary(false)}
+        bookTitle={book.title}
+        author={book.author}
+        bookCover="/placeholder.svg"
+        comprehensionScore={comprehensionScore}
       />
     </div>
   );
