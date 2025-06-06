@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Volume2, BookOpen } from 'lucide-react';
 import Header from '@/components/Header';
+import StarMethodHint from '@/components/StarMethodHint';
 
 const ReadingOptions = () => {
   const navigate = useNavigate();
@@ -11,7 +12,7 @@ const ReadingOptions = () => {
     if (mode === 'audio') {
       navigate('/audio-preview');
     } else {
-      navigate('/library', { state: { readingMode: 'read-along' } });
+      navigate('/audio-preview', { state: { mode: 'read-along' } });
     }
   };
 
@@ -28,6 +29,11 @@ const ReadingOptions = () => {
             <p className="text-xl text-gray-600 font-comic">
               Pick how you'd like to enjoy your story
             </p>
+          </div>
+
+          {/* STAR Method Hint */}
+          <div className="mb-12">
+            <StarMethodHint />
           </div>
 
           <div className="grid md:grid-cols-2 gap-8">

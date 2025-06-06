@@ -1,22 +1,37 @@
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { Volume2, Play, Pause, ArrowLeft, Check } from 'lucide-react';
+import { Volume2, Play, Pause, ArrowLeft, Check, HelpCircle, BookOpen, Star, Loader2 } from 'lucide-react';
 import Header from '@/components/Header';
 import { textToSpeech } from '@/utils/elevenlabs';
+import { analyzeStarMethod } from '@/utils/huggingface';
 import { useState, useRef, useEffect } from 'react';
 import { useToast } from '@/components/ui/use-toast';
 import { Textarea } from '@/components/ui/textarea';
+import StarMethodHint from '@/components/StarMethodHint';
+import { Progress } from '@/components/ui/progress';
+
+interface StarMethodScores {
+  feedback: string;
+}
 
 const AudioPreview = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+  const isReadAlong = location.state?.mode === 'read-along';
   const { toast } = useToast();
   const [isPlaying, setIsPlaying] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [showSummary, setShowSummary] = useState(false);
+  const [showSummary, setShowSummary] = useState(isReadAlong);
   const [summary, setSummary] = useState('');
   const [summarySubmitted, setSummarySubmitted] = useState(false);
+  const [showStarHint, setShowStarHint] = useState(false);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [starScores, setStarScores] = useState<StarMethodScores | null>(null);
+  const [audioUrl, setAudioUrl] = useState<string | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const [showResults, setShowResults] = useState(false);
+  const [analysisResult, setAnalysisResult] = useState<StarMethodScores | null>(null);
 
   const sampleParagraph = `Emma loved exploring the woods behind her house. One sunny morning, she discovered a shimmering path she had never seen before. The path was covered with sparkly leaves that seemed to dance in the sunlight.
 
@@ -26,29 +41,77 @@ const AudioPreview = () => {
     navigate('/library', { state: { readingMode: 'audio' } });
   };
 
-  const handlePlayAudio = async () => {
-    if (isPlaying) {
-      audioRef.current?.pause();
-      setIsPlaying(false);
-      return;
+  // Initialize audio element
+  useEffect(() => {
+    if (!audioRef.current) {
+      audioRef.current = new Audio();
+      audioRef.current.addEventListener('ended', () => {
+        setIsPlaying(false);
+        setShowSummary(true);
+      });
+      audioRef.current.addEventListener('error', (e) => {
+        console.error('Audio playback error:', e);
+        toast({
+          title: "Error",
+          description: "There was a problem playing the audio. Please try again.",
+          variant: "destructive",
+        });
+        setIsPlaying(false);
+        setIsLoading(false);
+      });
     }
 
-    setIsLoading(true);
-    try {
-      const audioUrl = await textToSpeech(sampleParagraph);
+    return () => {
       if (audioRef.current) {
-        audioRef.current.src = audioUrl;
-        await audioRef.current.play();
-        setIsPlaying(true);
-        audioRef.current.onended = () => {
-          setIsPlaying(false);
-          setShowSummary(true);
-        };
+        audioRef.current.pause();
+        audioRef.current.src = '';
+        audioRef.current = null;
+      }
+      if (audioUrl) {
+        URL.revokeObjectURL(audioUrl);
+      }
+    };
+  }, []);
+
+  // Update audio source when URL changes
+  useEffect(() => {
+    if (audioRef.current && audioUrl) {
+      audioRef.current.src = audioUrl;
+    }
+  }, [audioUrl]);
+
+  const handlePlayPause = async () => {
+    try {
+      if (isPlaying) {
+        audioRef.current?.pause();
+        setIsPlaying(false);
+        return;
+      }
+
+      if (!audioUrl) {
+        setIsLoading(true);
+        const url = await textToSpeech(sampleParagraph);
+        setAudioUrl(url);
+      }
+
+      if (audioRef.current) {
+        try {
+          await audioRef.current.play();
+          setIsPlaying(true);
+        } catch (playError) {
+          console.error('Error playing audio:', playError);
+          toast({
+            title: "Error",
+            description: "Could not play the audio. Please try again.",
+            variant: "destructive",
+          });
+        }
       }
     } catch (error) {
+      console.error('Error in handlePlayPause:', error);
       toast({
         title: "Error",
-        description: "Failed to generate audio. Please try again.",
+        description: "Could not generate or play the audio. Please try again.",
         variant: "destructive",
       });
     } finally {
@@ -56,146 +119,86 @@ const AudioPreview = () => {
     }
   };
 
-  const handleSummarySubmit = () => {
-    if (summary.trim().length < 10) {
+  const handleSummarySubmit = async () => {
+    if (!summary.trim()) {
       toast({
-        title: "Summary too short",
-        description: "Please write a longer summary of what you heard.",
+        title: "Please write a summary",
+        description: "Your summary can't be empty!",
         variant: "destructive",
       });
       return;
     }
-    setSummarySubmitted(true);
+
+    setIsAnalyzing(true);
+    try {
+      const result = await analyzeStarMethod(sampleParagraph, summary);
+      setAnalysisResult(result);
+      setShowResults(true);
+    } catch (error) {
+      console.error('Error analyzing summary:', error);
+      toast({
+        title: "Error",
+        description: "Could not analyze your summary. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsAnalyzing(false);
+    }
   };
 
-  const handleStartOver = () => {
-    setShowSummary(false);
-    setSummary('');
-    setSummarySubmitted(false);
-    if (audioRef.current) {
-      audioRef.current.pause();
-      audioRef.current.currentTime = 0;
-    }
-    setIsPlaying(false);
-  };
+  const renderScoreCard = (title: string, score: number) => (
+    <div className="bg-white p-4 rounded-lg shadow-sm">
+      <h3 className="text-sm font-medium text-gray-600 mb-2">{title}</h3>
+      <div className="flex items-center space-x-2">
+        <Progress value={score} className="h-2" />
+        <span className="text-sm font-bold text-readwise-blue">{score}%</span>
+      </div>
+    </div>
+  );
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-readwise-blue/5 to-white">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50">
       <Header />
-      <div className="container mx-auto px-4 py-8">
-        <div className="max-w-3xl mx-auto">
-          <Button
-            variant="ghost"
-            onClick={() => navigate(-1)}
-            className="mb-6 font-comic text-readwise-blue hover:bg-readwise-blue/10"
-          >
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Back
-          </Button>
+      
+      <div className="container mx-auto px-4 py-12">
+        <div className="max-w-4xl mx-auto">
+          <div className="text-center mb-12">
+            <h1 className="text-4xl font-bold text-readwise-blue font-comic mb-4">
+              {isReadAlong ? 'Read Along Mode 📖' : 'Audio Preview 🎧'}
+            </h1>
+            <p className="text-xl text-gray-600 font-comic">
+              {isReadAlong ? 'Read the story and write your summary!' : 'Listen to the story and practice your summary!'}
+            </p>
+          </div>
 
-          <Card className="border-2 border-readwise-blue/20 shadow-lg">
+          {/* STAR Method Hint */}
+          <div className="mb-12">
+            <StarMethodHint />
+          </div>
+
+          <Card className="mb-8">
             <CardContent className="p-6">
-              <div className="space-y-6">
-                <div className="text-center">
-                  <h1 className="text-3xl font-bold text-readwise-blue font-comic mb-2">
-                    Audio Preview
-                  </h1>
-                  <p className="text-gray-600 font-comic">
-                    Listen to a sample of how the story will be read aloud
-                  </p>
-                </div>
-
-                <div className="bg-white p-6 rounded-lg border-2 border-readwise-blue/20">
-                  <p className="text-gray-700 font-comic leading-relaxed mb-6">
-                    {sampleParagraph}
-                  </p>
-
+              <div className="space-y-4">
+                <h2 className="text-2xl font-bold text-readwise-blue font-comic">
+                  {isReadAlong ? 'Story Text' : 'Story Preview'}
+                </h2>
+                <p className="text-gray-600 font-comic">
+                  {sampleParagraph}
+                </p>
+                {!isReadAlong && (
                   <div className="flex justify-center space-x-4">
                     <Button
-                      onClick={handlePlayAudio}
+                      onClick={handlePlayPause}
                       disabled={isLoading}
-                      className="bg-readwise-blue hover:bg-readwise-blue/90 text-white font-comic px-8"
+                      className="bg-readwise-blue hover:bg-readwise-blue/90 text-white font-comic text-lg px-8 py-6"
                     >
-                      {isLoading ? (
-                        <div className="flex items-center">
-                          <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent mr-2"></div>
-                          Loading...
-                        </div>
-                      ) : isPlaying ? (
-                        <>
-                          <Pause className="h-4 w-4 mr-2" />
-                          Pause
-                        </>
-                      ) : (
-                        <>
-                          <Play className="h-4 w-4 mr-2" />
-                          Play Sample
-                        </>
-                      )}
+                      {isLoading ? 'Loading...' : isPlaying ? 'Pause' : 'Play'}
                     </Button>
-                  </div>
-                </div>
-
-                {showSummary && !summarySubmitted && (
-                  <div className="mt-8 p-6 bg-white rounded-lg border-2 border-readwise-blue/20">
-                    <h2 className="text-2xl font-bold text-readwise-blue font-comic mb-4">
-                      Write a Summary 📝
-                    </h2>
-                    <p className="text-gray-700 font-comic mb-4">
-                      Please write a summary of what you just heard in your own words.
-                    </p>
-                    <Textarea
-                      value={summary}
-                      onChange={(e) => setSummary(e.target.value)}
-                      placeholder="Write your summary here..."
-                      className="w-full h-32 font-comic mb-4"
-                    />
-                    <div className="flex justify-end">
-                      <Button
-                        onClick={handleSummarySubmit}
-                        className="bg-readwise-blue hover:bg-readwise-blue/90 text-white font-comic"
-                      >
-                        Submit Summary
-                      </Button>
-                    </div>
-                  </div>
-                )}
-
-                {summarySubmitted && (
-                  <div className="mt-8 p-6 bg-white rounded-lg border-2 border-readwise-blue/20">
-                    <h2 className="text-2xl font-bold text-readwise-blue font-comic mb-4">
-                      Great Job! 🎉
-                    </h2>
-                    <div className="space-y-4">
-                      <p className="text-xl font-comic text-gray-700">
-                        Thank you for writing your summary! This helps you understand and remember the story better.
-                      </p>
-                      <div className="flex justify-between">
-                        <Button
-                          onClick={handleStartOver}
-                          variant="outline"
-                          className="font-comic"
-                        >
-                          Listen Again
-                        </Button>
-                        <Button
-                          onClick={handleStartReading}
-                          className="bg-readwise-green hover:bg-readwise-green/90 text-white font-comic"
-                        >
-                          Start Reading
-                        </Button>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {!showSummary && !summarySubmitted && (
-                  <div className="mt-8">
                     <Button
-                      onClick={handleStartReading}
-                      className="w-full bg-readwise-green hover:bg-readwise-green/90 text-white font-comic py-6 text-lg"
+                      onClick={() => setShowSummary(true)}
+                      className="bg-readwise-blue hover:bg-readwise-blue/90 text-white font-comic text-lg px-8 py-6"
                     >
-                      Start Reading
+                      Write Summary
                     </Button>
                   </div>
                 )}
@@ -203,8 +206,61 @@ const AudioPreview = () => {
             </CardContent>
           </Card>
 
-          {/* Hidden Audio Element */}
-          <audio ref={audioRef} className="hidden" />
+          {/* Summary Section */}
+          {showSummary && (
+            <Card className="mb-8">
+              <CardContent className="p-6">
+                <div className="space-y-4">
+                  <h2 className="text-2xl font-bold text-readwise-blue font-comic">
+                    Your Summary
+                  </h2>
+                  <textarea
+                    value={summary}
+                    onChange={(e) => setSummary(e.target.value)}
+                    placeholder="Write your summary here using the STAR method..."
+                    className="w-full h-32 p-4 border rounded-lg font-comic"
+                  />
+                  <div className="flex justify-center space-x-4">
+                    <Button
+                      onClick={handleSummarySubmit}
+                      disabled={isAnalyzing}
+                      className="bg-readwise-blue hover:bg-readwise-blue/90 text-white font-comic text-lg px-8 py-6"
+                    >
+                      {isAnalyzing ? 'Analyzing...' : 'Check My Summary'}
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Analysis Results */}
+          {showResults && analysisResult && (
+            <Card>
+              <CardContent className="p-6">
+                <div className="space-y-4">
+                  <h2 className="text-2xl font-bold text-readwise-blue font-comic">
+                    Analysis Results
+                  </h2>
+                  <div className="space-y-2">
+                    <p className="text-gray-600 font-comic">
+                      {analysisResult.feedback}
+                    </p>
+                  </div>
+                  <Button
+                    onClick={() => {
+                      setShowResults(false);
+                      setSummary('');
+                      setAnalysisResult(null);
+                    }}
+                    className="bg-readwise-blue hover:bg-readwise-blue/90 text-white font-comic text-lg px-8 py-6 w-full"
+                  >
+                    Try Another Summary
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          )}
         </div>
       </div>
     </div>

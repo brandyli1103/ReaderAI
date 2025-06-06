@@ -10,6 +10,7 @@ import Progress from "./pages/Progress";
 import NotFound from "./pages/NotFound";
 import ReadingOptions from "./pages/ReadingOptions";
 import AudioPreview from "@/pages/AudioPreview";
+import SpellingPracticePage from '@/pages/SpellingPracticePage';
 
 const queryClient = new QueryClient();
 
@@ -26,6 +27,7 @@ const App = () => (
           <Route path="/progress" element={<Progress />} />
           <Route path="/reading-options" element={<ReadingOptions />} />
           <Route path="/audio-preview" element={<AudioPreview />} />
+          <Route path="/spelling-practice" element={<SpellingPracticePage />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

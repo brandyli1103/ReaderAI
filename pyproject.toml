@@ -1,0 +1,10 @@
+[project]
+name = "readwise-kids-spark"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "google-genai>=1.19.0",
+    "mcp-agent>=0.1.1",
+]
