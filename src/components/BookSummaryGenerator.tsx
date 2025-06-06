@@ -1,10 +1,9 @@
-
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { BookOpen, Users, Lightbulb, Timeline, Star, Share2, Heart } from 'lucide-react';
+import { BookOpen, Users, Lightbulb, Clock, Star, Share2, Heart } from 'lucide-react';
 
 interface BookSummary {
   keyPlotPoints: string[];
@@ -178,7 +177,7 @@ const BookSummaryGenerator = ({
   const renderTimelineSection = () => (
     <div className="space-y-4">
       <h3 className="text-lg font-comic font-bold text-readwise-blue flex items-center">
-        <Timeline className="h-5 w-5 mr-2" />
+        <Clock className="h-5 w-5 mr-2" />
         Story Timeline
       </h3>
       <div className="relative">
@@ -256,7 +255,7 @@ const BookSummaryGenerator = ({
           { id: 'plot', label: 'Story Summary', icon: BookOpen },
           { id: 'characters', label: 'Characters', icon: Users },
           { id: 'themes', label: 'Themes', icon: Lightbulb },
-          { id: 'timeline', label: 'Timeline', icon: Timeline }
+          { id: 'timeline', label: 'Timeline', icon: Clock }
         ].map(({ id, label, icon: Icon }) => (
           <Button
             key={id}
