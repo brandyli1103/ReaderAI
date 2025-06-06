@@ -66,7 +66,7 @@ const sampleQuestions: ComprehensionQuestion[] = [
   }
 ];
 
-const postReadingQuestions: ComprehensionQuestion[] = [
+const postReadingQuestionsData: ComprehensionQuestion[] = [
   {
     id: 'pr1',
     question: 'What is the main theme of this story?',
@@ -146,7 +146,7 @@ const postReadingQuestions: ComprehensionQuestion[] = [
 
 export const useComprehensionQuestions = (bookId: string) => {
   const [duringReadingQuestions] = useState<ComprehensionQuestion[]>(sampleQuestions);
-  const [postReadingQuestions] = useState<ComprehensionQuestion[]>(postReadingQuestions);
+  const [postReadingQuestions] = useState<ComprehensionQuestion[]>(postReadingQuestionsData);
   const [answeredQuestions, setAnsweredQuestions] = useState<Set<string>>(new Set());
   const [comprehensionScore, setComprehensionScore] = useState<number>(0);
 

@@ -6,7 +6,22 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { Trophy, Star, CheckCircle, Book, ArrowRight, Volume2 } from 'lucide-react';
-import type { ComprehensionQuestion } from './ComprehensionQuestion';
+
+interface QuestionOption {
+  id: string;
+  text: string;
+  isCorrect: boolean;
+}
+
+interface ComprehensionQuestion {
+  id: string;
+  question: string;
+  options: QuestionOption[];
+  hint: string;
+  explanation: string;
+  type: 'multiple-choice' | 'drag-drop' | 'image-match';
+  category: 'character' | 'plot' | 'vocabulary' | 'prediction' | 'main-idea' | 'details' | 'sequence' | 'cause-effect';
+}
 
 interface PostReadingQuizProps {
   questions: ComprehensionQuestion[];
