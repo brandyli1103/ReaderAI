@@ -230,7 +230,7 @@ const ReadingInterface = () => {
     
     vocabularyWords.forEach(vocab => {
       const regex = new RegExp(`\\b${vocab.word}\\b`, 'gi');
-      processedContent = processedContent.replace(regex, `<span class="vocabulary-word">${vocab.word}</span>`);
+      processedContent = processedContent.replace(regex,vocab.word);
     });
 
     return processedContent.split('\n').map((paragraph, index) => (

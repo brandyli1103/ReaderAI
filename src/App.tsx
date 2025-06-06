@@ -9,6 +9,7 @@ import ReadingInterface from "./pages/ReadingInterface";
 import Progress from "./pages/Progress";
 import NotFound from "./pages/NotFound";
 import ReadingOptions from "./pages/ReadingOptions";
+import AudioPreview from "@/pages/AudioPreview";
 
 const queryClient = new QueryClient();
 
@@ -24,6 +25,7 @@ const App = () => (
           <Route path="/read/:bookId" element={<ReadingInterface />} />
           <Route path="/progress" element={<Progress />} />
           <Route path="/reading-options" element={<ReadingOptions />} />
+          <Route path="/audio-preview" element={<AudioPreview />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
